@@ -20,6 +20,14 @@ def getComplement(DNA): """get the complementary strand of a DNA string"""
     """swap out temporary characters"""
     return comp.lower()
 
+def forwardBind(DNA, length): """return a complementary forward primer strand of a given length"""
+
+def reverseBind(DNA, length): """return a complementary reverse primer strand of a given length""""
+
+def forwardExtend(DNA, primer, length): """extend a forward primer to a given length"""
+
+def reverseExtend(DNA, primer, length): """extend a reverse primer to a given length"""
+
 
 """program"""
 
