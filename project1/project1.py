@@ -68,6 +68,10 @@ class DNA:
         forwardLen = len(self.forward["bases"])
         reverseLen = len(self.reverse["bases"])
         lenDiff = forwardLen - reverseLen
+
+        # operation not applicable if primer is empty
+        if forwardLen == 0 or reverseLen == 0:
+            return
         
         if lenDiff < 0: # forward primer extended forward
             primer = self.forward
