@@ -33,39 +33,69 @@ def getComplement(DNA):
     return comp.lower()
 
 class DNA:
-    def __init__():
-        #
+    def __init__(self, forward, reverse):
+        self.forward = forward
+        self.reverse = reverse
+        return
 
     """ fill empty strand with segment of complementary DNA bracketing target subsequence """
-    def bindPrimer(target, length):
-        # forward strand present: add reverse primer at back of target
-
-        # reverse strand present: add forward primer at front of target
-
-        # operation not application with both strands present
+    """ assume forward strand of target given """
+    def bindPrimer(self, target, length):
+        
+        if len(self.reverse) == 0: # forward strand present: add reverse primer at back of target
+            index = self.forward.find(target) + len(target)
+            
+            self.reverse = (" " * (index - length)) # empty space
+            self.reverse = self.reverse + getComplement(self.forward[index - length : index]) # primer sequence
+            self.reverse = self.reverse + (" " * (len(self.forward) - index)) # empty space
+            
+        elif len(self.forward) == 0: # reverse strand present: add forward primer at front of target
+            index = self.reverse.find(getComplement(target))
+            
+            self.forward = (" " * index) # empty space
+            self.forward = self.forward + getComplement(self.reverse[index : index + length]) # primer sequence
+            self.forward = self.forward + (" " * (len(self.reverse) - (index + length))) # empty space
+            # primers padded with whitespace to keep position identifiable (may change method later)
+            
+        else: # operation not application with both strands present
+            return
 
     """ extend primer in proper direction to a given length """
-    def extendPrimer(length):
+    def extendPrimer(self, length):
         # shorter strand identified as primer
+        lenDiff = len(self.forward) - len(self.reverse)
+        
+        if lenDiff > 0: # forward primer extended forward
+            # find relative position of primer
+            return
+        
+        elif lenDiff < 0: # reverse primer extended backwards
+            # find relative position of primer
+            return
+        
+        else: # operation not applicable in full double-helix
+            return
 
-        # forward primer extended forward
-
-        # reverse primer extended backwards
-
-        # operation not applicable in full double-helix
+    """put reverse strand into new object, clean up empty spaces, return"""
+    def denature(self):
+        seperated = DNA("", self.reverse.replace(" ", ""))
+        self.forward = self.forward.replace(" ", "")
+        self.reverse = ""
+        return seperated
 
     """ display strands """
     def print(self):
         # forward
-
+        print("[5']" + self.forward + "[3']")
         # backward
+        print("[5']" + self.reverse + "[3']")
 
 
 #"""program"""
 
-n = 2000 #"""length of original template"""
-m = 200 #"""length of segment to amplify"""
-p = 20 #"""length of primers"""
+n = 40 #"""length of original template"""
+m = 20 #"""length of segment to amplify"""
+p = 5 #"""length of primers"""
 
 d = 200 # base fall-off rate for polymerase
 e = 50 # random variation in fall-off rate
@@ -75,10 +105,14 @@ cycles = 50
 template = generateStrand(n) # original forward dna strand
 
 targetIndex = random.randint(0, n - m - 1) # position of desired dna sequence
-forwardTarget = template[targetIndex, targetIndex + m] # desired dna sequence (forward strand)
-reverseTarget = getComplement(forwardTarget) # desired dna sequence (reverse strand)
+forwardTarget = template[targetIndex : targetIndex + m] # desired dna sequence (forward strand)
+# reverseTarget = getComplement(forwardTarget) # desired dna sequence (reverse strand)
 
-strands = [template, getComplement(template)] #"""collection of all dna strands in the simulation"""
+strands = [DNA(template, getComplement(template))] #"""collection of all dna strands in the simulation"""
+strands.append(strands[0].denature())
+for s in strands:
+    s.bindPrimer(forwardTarget, p)
+    s.print()
 
 """
 PCR Process
