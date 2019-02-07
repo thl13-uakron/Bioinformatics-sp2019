@@ -32,6 +32,7 @@ def getComplement(DNA):
     """swap out temporary characters"""
     return comp.lower()
 
+"""abstraction of DNA pair with PCR operations as methods"""
 class DNA:
     def __init__(self, forward, reverse):
         self.forward = {"bases": forward, "pos": 0}
@@ -60,15 +61,33 @@ class DNA:
     """ extend primer in proper direction to a given length """
     def extendPrimer(self, length):
         # shorter strand identified as primer
-        lenDiff = len(self.forward["bases"]) - len(self.reverse["bases"])
+        forwardLen = len(self.forward["bases"])
+        reverseLen = len(self.reverse["bases"])
+        lenDiff = forwardLen - reverseLen
         
-        if lenDiff > 0: # forward primer extended forward
-            # find relative position of primer
-            return
+        if lenDiff < 0: # forward primer extended forward
+            primer = self.forward
+            template = self.reverse
+            
+            # cap length as needed to match template
+            if template["pos"] + length > reverseLen:
+                length = reverseLen - template["pos"]
+                
+            # extend primer to length towards end of template
+            primer["bases"] = getComplement(template["bases"][primer["pos"] : primer["pos"] + length])
+            
         
-        elif lenDiff < 0: # reverse primer extended backwards
-            # find relative position of primer
-            return
+        elif lenDiff > 0: # reverse primer extended backwards
+            primer = self.reverse
+            template = self.forward
+            
+            # cap length as needed to match template
+            if length > primer["pos"]:
+                length = primer["pos"]
+                
+            # extend primer to length towards start of template
+            primer["pos"] -= length - len(primer["bases"])
+            primer["bases"] = getComplement(template["bases"][primer["pos"] : primer["pos"] + length])
         
         else: # operation not applicable in full double-helix
             return
@@ -88,7 +107,54 @@ class DNA:
         print((" " * self.reverse["pos"]) + "3' " + self.reverse["bases"] + " 5'")
 
 
-#"""program"""
+"""
+PCR Process
+- Get subsequence of DNA to replicate
+- Perform cycles
+    - Match primers to each DNA segment
+        - Forward primers match reverse strands, contain first p bases of target
+        - Reverse primers match forward strands, contain last p bases of target
+    - Extend primers to contain subsequence
+        - Length set randomly to d + [-e, e], capped at length of template strand
+    - Display intermediate results
+    - Repeat with resulting set of strands
+- Display final results
+"""
+
+"""split collection of DNA pairs into collection individual strands"""
+def denatureAll(strandList):
+    newList = []
+    
+    for s in strandList:
+        # get seperate strands
+        n = s.denature()
+        newList.append(s)
+        # avoid adding empty pairs
+        if len(n.forward) > 0 or len(n.reverse) > 0:
+            newList.append(n)
+            
+    strandList = newList
+
+"""add complementary primers to all single strands at target subsequence for replication"""
+def bindAll(strandList, forwardTarget, primerLen, variation=0):
+    for s in strandList:
+        s.bindPrimer(forwardTarget, primerLen)
+
+"""extend all DNA primers to length in variation range"""
+def extendAll(strandList, extensionLen, variation=0):
+    for s in strandList:
+        s.extendPrimer(extensionLen)
+
+"""display contents of all DNA pairs"""
+def printAll(strandList):
+    print("\n")
+    for s in strandList:
+        print("")
+        s.print()
+        print("")
+        
+    
+#"""driver program"""
 
 n = 40 #"""length of original template"""
 m = 20 #"""length of segment to amplify"""
@@ -106,22 +172,5 @@ forwardTarget = template[targetIndex : targetIndex + m] # desired dna sequence (
 # reverseTarget = getComplement(forwardTarget) # desired dna sequence (reverse strand)
 
 strands = [DNA(template, getComplement(template))] #"""collection of all dna strands in the simulation"""
-strands.append(strands[0].denature())
-for s in strands:
-    s.bindPrimer(forwardTarget, p)
-    s.print()
 
-"""
-PCR Process
-- Get subsequence of DNA to replicate
-- Perform cycles
-    - Match primers to each DNA segment
-        - Forward primers match reverse strands, contain first p bases of target
-        - Reverse primers match forward strands, contain last p bases of target
-    - Extend primers to contain subsequence
-        - Length set randomly to d + [-e, e], capped at length of template strand
-    - Display intermediate results
-    - Repeat with resulting set of strands
-- Display final results
-"""
 
