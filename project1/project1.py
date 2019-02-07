@@ -34,28 +34,25 @@ def getComplement(DNA):
 
 class DNA:
     def __init__(self, forward, reverse):
-        self.forward = forward
-        self.reverse = reverse
+        self.forward = {"bases": forward, "pos": 0}
+        self.reverse = {"bases": reverse, "pos": 0}
         return
 
     """ fill empty strand with segment of complementary DNA bracketing target subsequence """
     """ assume forward strand of target given """
     def bindPrimer(self, target, length):
         
-        if len(self.reverse) == 0: # forward strand present: add reverse primer at back of target
-            index = self.forward.find(target) + len(target)
+        if len(self.reverse["bases"]) == 0: # forward strand present: add reverse primer at back of target
+            index = self.forward["bases"].find(target) + len(target) # get relative position
             
-            self.reverse = (" " * (index - length)) # empty space
-            self.reverse = self.reverse + getComplement(self.forward[index - length : index]) # primer sequence
-            self.reverse = self.reverse + (" " * (len(self.forward) - index)) # empty space
+            self.reverse["pos"] = index - length # log relative position
+            self.reverse["bases"] = getComplement(self.forward["bases"][index - length : index]) # log primer sequence
             
-        elif len(self.forward) == 0: # reverse strand present: add forward primer at front of target
-            index = self.reverse.find(getComplement(target))
+        elif len(self.forward["bases"]) == 0: # reverse strand present: add forward primer at front of target
+            index = self.reverse["bases"].find(getComplement(target)) # get relative position
             
-            self.forward = (" " * index) # empty space
-            self.forward = self.forward + getComplement(self.reverse[index : index + length]) # primer sequence
-            self.forward = self.forward + (" " * (len(self.reverse) - (index + length))) # empty space
-            # primers padded with whitespace to keep position identifiable (may change method later)
+            self.forward["pos"] = index # log relative position
+            self.forward["bases"] = getComplement(self.reverse["bases"][index : index + length]) # log primer sequence
             
         else: # operation not application with both strands present
             return
@@ -63,7 +60,7 @@ class DNA:
     """ extend primer in proper direction to a given length """
     def extendPrimer(self, length):
         # shorter strand identified as primer
-        lenDiff = len(self.forward) - len(self.reverse)
+        lenDiff = len(self.forward["bases"]) - len(self.reverse["bases"])
         
         if lenDiff > 0: # forward primer extended forward
             # find relative position of primer
@@ -76,19 +73,19 @@ class DNA:
         else: # operation not applicable in full double-helix
             return
 
-    """put reverse strand into new object, clean up empty spaces, return"""
+    """put reverse strand into new object, reset relative positioning, return"""
     def denature(self):
-        seperated = DNA("", self.reverse.replace(" ", ""))
-        self.forward = self.forward.replace(" ", "")
-        self.reverse = ""
+        seperated = DNA("", self.reverse["bases"])
+        self.forward["pos"] = 0
+        self.reverse = {"bases": "", "pos": 0}
         return seperated
 
     """ display strands """
     def print(self):
         # forward
-        print("[5']" + self.forward + "[3']")
+        print((" " * self.forward["pos"]) + "5' " + self.forward["bases"] + " 3'")
         # backward
-        print("[5']" + self.reverse + "[3']")
+        print((" " * self.reverse["pos"]) + "3' " + self.reverse["bases"] + " 5'")
 
 
 #"""program"""
