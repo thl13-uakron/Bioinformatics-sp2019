@@ -41,10 +41,9 @@ class DNA:
 
     """ fill empty strand with segment of complementary DNA bracketing target subsequence """
     """ assume forward strand of target given """
-    def bindPrimer(self, target, length):
+    def bindPrimer(self, forwardPrimer, reversePrimer):
         
         if len(self.reverse["bases"]) == 0: # forward strand present: add reverse primer at back of target
-            reversePrimer = getComplement(target[0 - length :]) # get primer sequence
             index = self.forward["bases"].find(getComplement(reversePrimer)) # search for primer complement
 
             if index > -1: # add primer if complement found
@@ -52,7 +51,6 @@ class DNA:
                 self.reverse["bases"] = reversePrimer # log primer sequence
             
         elif len(self.forward["bases"]) == 0: # reverse strand present: add forward primer at front of target
-            forwardPrimer = target[: length] # get primer sequence
             index = self.reverse["bases"].find(getComplement(forwardPrimer)) # search for primer complement
 
             if index > -1: # add primer if complement found
@@ -70,7 +68,7 @@ class DNA:
         lenDiff = forwardLen - reverseLen
 
         # operation not applicable if primer is empty
-        if forwardLen == 0 or reverseLen == 0:
+        if forwardLen == 0 and reverseLen == 0:
             return
         
         if lenDiff < 0: # forward primer extended forward
@@ -90,8 +88,8 @@ class DNA:
             template = self.forward
             
             # cap length as needed to match template
-            if length > primer["pos"]:
-                length = primer["pos"]
+            if length > primer["pos"] + len(primer["bases"]):
+                length = primer["pos"] + len(primer["bases"])
                 
             # extend primer to length towards start of template
             primer["pos"] -= length - len(primer["bases"])
@@ -132,12 +130,10 @@ PCR Process
 """split collection of DNA pairs into collection individual strands"""
 def denatureAll(strandList):
     newList = []
-    
     for s in strandList: # get seperated strands
-        n = s.denature()
-        # avoid adding empty pairs
-        if len(n.forward) > 0 or len(n.reverse) > 0:
-            newList.append(n)
+        # skip seperation for single strands
+        if len(s.forward["bases"]) > 0 and len(s.reverse["bases"]) > 0:
+            newList.append(s.denature())
             
     # add new strands back into container
     for n in newList:
@@ -145,8 +141,11 @@ def denatureAll(strandList):
 
 """add complementary primers to all single strands at target subsequence for replication"""
 def bindAll(strandList, forwardTarget, primerLen, variation=0):
+    forwardPrimer = forwardTarget[: primerLen]
+    reversePrimer = getComplement(forwardTarget[0 - primerLen :])
+    
     for s in strandList:
-        s.bindPrimer(forwardTarget, primerLen)
+        s.bindPrimer(forwardPrimer, reversePrimer)
 
 """extend all DNA primers to length in variation range"""
 def extendAll(strandList, extensionLen, variation=0):
@@ -181,12 +180,11 @@ forwardTarget = template[targetIndex : targetIndex + m] # desired dna sequence (
 strands = [DNA(template, getComplement(template))] #"""collection of all dna strands in the simulation"""
 
 # perform cycles
+printAll(strands)
 while cycles > 0:
     denatureAll(strands)
-    printAll(strands)
     bindAll(strands, forwardTarget, p)
-    printAll(strands)
     extendAll(strands, d, e)
     printAll(strands)
-    --cycles
+    cycles -= 1
 
