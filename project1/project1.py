@@ -32,21 +32,33 @@ def getComplement(DNA):
     """swap out temporary characters"""
     return comp.lower()
 
-"""return a complementary forward primer strand of a given length"""
-def forwardBind(DNA, length):
-    return
+class DNA:
+    def __init__():
+        #
 
-"""return a complementary reverse primer strand of a given length"""
-def reverseBind(DNA, length):
-    return
+    """ fill empty strand with segment of complementary DNA bracketing target subsequence """
+    def bindPrimer(target, length):
+        # forward strand present: add reverse primer at back of target
 
-"""extend a forward primer to a given length"""
-def forwardExtend(DNA, primer, length):
-    return
+        # reverse strand present: add forward primer at front of target
 
-"""extend a reverse primer to a given length"""
-def reverseExtend(DNA, primer, length):
-    return
+        # operation not application with both strands present
+
+    """ extend primer in proper direction to a given length """
+    def extendPrimer(length):
+        # shorter strand identified as primer
+
+        # forward primer extended forward
+
+        # reverse primer extended backwards
+
+        # operation not applicable in full double-helix
+
+    """ display strands """
+    def print(self):
+        # forward
+
+        # backward
 
 
 #"""program"""
@@ -55,6 +67,30 @@ n = 2000 #"""length of original template"""
 m = 200 #"""length of segment to amplify"""
 p = 20 #"""length of primers"""
 
-template = generateStrand(n) # original dna strand 
+d = 200 # base fall-off rate for polymerase
+e = 50 # random variation in fall-off rate
+
+cycles = 50
+
+template = generateStrand(n) # original forward dna strand
+
+targetIndex = random.randint(0, n - m - 1) # position of desired dna sequence
+forwardTarget = template[targetIndex, targetIndex + m] # desired dna sequence (forward strand)
+reverseTarget = getComplement(forwardTarget) # desired dna sequence (reverse strand)
+
 strands = [template, getComplement(template)] #"""collection of all dna strands in the simulation"""
+
+"""
+PCR Process
+- Get subsequence of DNA to replicate
+- Perform cycles
+    - Match primers to each DNA segment
+        - Forward primers match reverse strands, contain first p bases of target
+        - Reverse primers match forward strands, contain last p bases of target
+    - Extend primers to contain subsequence
+        - Length set randomly to d + [-e, e], capped at length of template strand
+    - Display intermediate results
+    - Repeat with resulting set of strands
+- Display final results
+"""
 
