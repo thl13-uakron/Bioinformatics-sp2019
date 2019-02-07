@@ -44,18 +44,22 @@ class DNA:
     def bindPrimer(self, target, length):
         
         if len(self.reverse["bases"]) == 0: # forward strand present: add reverse primer at back of target
-            index = self.forward["bases"].find(target) + len(target) # get relative position
-            
-            self.reverse["pos"] = index - length # log relative position
-            self.reverse["bases"] = getComplement(self.forward["bases"][index - length : index]) # log primer sequence
+            reversePrimer = getComplement(target[0 - length :]) # get primer sequence
+            index = self.forward["bases"].find(getComplement(reversePrimer)) # search for primer complement
+
+            if index > -1: # add primer if complement found
+                self.reverse["pos"] = index # log primer position
+                self.reverse["bases"] = reversePrimer # log primer sequence
             
         elif len(self.forward["bases"]) == 0: # reverse strand present: add forward primer at front of target
-            index = self.reverse["bases"].find(getComplement(target)) # get relative position
+            forwardPrimer = target[: length] # get primer sequence
+            index = self.reverse["bases"].find(getComplement(forwardPrimer)) # search for primer complement
+
+            if index > -1: # add primer if complement found
+                self.forward["pos"] = index # log primer position
+                self.forward["bases"] = forwardPrimer # log primer sequence
             
-            self.forward["pos"] = index # log relative position
-            self.forward["bases"] = getComplement(self.reverse["bases"][index : index + length]) # log primer sequence
-            
-        else: # operation not application with both strands present
+        else: # operation not applicable with both strands present
             return
 
     """ extend primer in proper direction to a given length """
@@ -125,15 +129,15 @@ PCR Process
 def denatureAll(strandList):
     newList = []
     
-    for s in strandList:
-        # get seperate strands
+    for s in strandList: # get seperated strands
         n = s.denature()
-        newList.append(s)
         # avoid adding empty pairs
         if len(n.forward) > 0 or len(n.reverse) > 0:
             newList.append(n)
             
-    strandList = newList
+    # add new strands back into container
+    for n in newList:
+        strandList.append(n)
 
 """add complementary primers to all single strands at target subsequence for replication"""
 def bindAll(strandList, forwardTarget, primerLen, variation=0):
@@ -143,7 +147,7 @@ def bindAll(strandList, forwardTarget, primerLen, variation=0):
 """extend all DNA primers to length in variation range"""
 def extendAll(strandList, extensionLen, variation=0):
     for s in strandList:
-        s.extendPrimer(extensionLen)
+        s.extendPrimer(extensionLen + random.randint(0 - variation, variation))
 
 """display contents of all DNA pairs"""
 def printAll(strandList):
@@ -151,19 +155,18 @@ def printAll(strandList):
     for s in strandList:
         print("")
         s.print()
-        print("")
         
     
 #"""driver program"""
 
-n = 40 #"""length of original template"""
+n = 80 #"""length of original template"""
 m = 20 #"""length of segment to amplify"""
-p = 5 #"""length of primers"""
+p = 10 #"""length of primers"""
 
-d = 200 # base fall-off rate for polymerase
-e = 50 # random variation in fall-off rate
+d = 25 # base fall-off rate for polymerase
+e = 5 # random variation in fall-off rate
 
-cycles = 50
+cycles = 10
 
 template = generateStrand(n) # original forward dna strand
 
@@ -173,4 +176,13 @@ forwardTarget = template[targetIndex : targetIndex + m] # desired dna sequence (
 
 strands = [DNA(template, getComplement(template))] #"""collection of all dna strands in the simulation"""
 
+# perform cycles
+while cycles > 0:
+    denatureAll(strands)
+    printAll(strands)
+    bindAll(strands, forwardTarget, p)
+    printAll(strands)
+    extendAll(strands, d, e)
+    printAll(strands)
+    --cycles
 
