@@ -158,16 +158,51 @@ def printAll(strandList):
     for s in strandList:
         print("")
         s.print()
-        
+
+"""collect relevant data on experiment output"""
+def getStrandData(strandList, forwardTarget):
+    dataset = {"numStrands":0, "targetCopies":0, "lenList":[], "avgLen":0}
+
+    # check through forward and reverse strands
+    for s in strandList:
+        forward = s.forward["bases"]
+        reverse = s.reverse["bases"]
+        if forward != "":
+            dataset["numStrands"] += 1
+            dataset["avgLen"] += len(forward)
+            dataset["lenList"].append(len(forward))
+            if forwardTarget in forward:
+                dataset["targetCopies"] += 1
+        if reverse != "":
+            dataset["numStrands"] += 1
+            dataset["avgLen"] += len(reverse)
+            dataset["lenList"].append(len(reverse))
+            if getComplement(forwardTarget) in reverse:
+                dataset["targetCopies"] += 1
+
+    # adjust data as needed
+    dataset["avgLen"] /= dataset["numStrands"]
+    dataset["avgLen"] = int(dataset["avgLen"])
+    dataset["lenList"].sort()
+    
+    return dataset
+
+"""format and display previous"""
+def printStrandData(strandList, forwardTarget):
+    dataSet = getStrandData(strandList, forwardTarget)
+    print("\nTotal strands:", dataSet["numStrands"])
+    print("Copies of target sequence:", dataSet["targetCopies"])
+    print("Length of target sequence:", len(forwardTarget))
+    print("Average strand length:", dataSet["avgLen"])
     
 #"""driver program"""
 
-n = 80 #"""length of original template"""
-m = 20 #"""length of segment to amplify"""
-p = 10 #"""length of primers"""
+n = 2000 #"""length of original template"""
+m = 200 #"""length of segment to amplify"""
+p = 20 #"""length of primers"""
 
-d = 25 # base fall-off rate for polymerase
-e = 5 # random variation in fall-off rate
+d = 220 # base fall-off rate for polymerase
+e = 50 # random variation in fall-off rate
 
 cycles = 10
 
@@ -180,11 +215,11 @@ forwardTarget = template[targetIndex : targetIndex + m] # desired dna sequence (
 strands = [DNA(template, getComplement(template))] #"""collection of all dna strands in the simulation"""
 
 # perform cycles
-printAll(strands)
+printStrandData(strands, forwardTarget)
 while cycles > 0:
     denatureAll(strands)
     bindAll(strands, forwardTarget, p)
     extendAll(strands, d, e)
-    printAll(strands)
+    printStrandData(strands, forwardTarget)
     cycles -= 1
 
