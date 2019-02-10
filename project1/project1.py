@@ -40,6 +40,7 @@ class DNA:
         return
 
     """ fill empty strand with segment of complementary DNA bracketing target subsequence """
+    """ return true if primer binded, false otherwise """
     """ assume forward strand of target given """
     def bindPrimer(self, forwardPrimer, reversePrimer):
         
@@ -49,6 +50,9 @@ class DNA:
             if index > -1: # add primer if complement found
                 self.reverse["pos"] = index # log primer position
                 self.reverse["bases"] = reversePrimer # log primer sequence
+                return True
+            else:
+                return False
             
         elif len(self.forward["bases"]) == 0: # reverse strand present: add forward primer at front of target
             index = self.reverse["bases"].find(getComplement(forwardPrimer)) # search for primer complement
@@ -56,11 +60,15 @@ class DNA:
             if index > -1: # add primer if complement found
                 self.forward["pos"] = index # log primer position
                 self.forward["bases"] = forwardPrimer # log primer sequence
+                return True
+            else:
+                return False
             
         else: # operation not applicable with both strands present
-            return
+            return False
 
     """ extend primer in proper direction to a given length """
+    """ return true if extension made, false otherwise """
     def extendPrimer(self, length):
         # shorter strand identified as primer
         forwardLen = len(self.forward["bases"])
@@ -69,7 +77,7 @@ class DNA:
 
         # operation not applicable if primer is empty
         if forwardLen == 0 and reverseLen == 0:
-            return
+            return False
         
         if lenDiff < 0: # forward primer extended forward
             primer = self.forward
@@ -81,7 +89,7 @@ class DNA:
                 
             # extend primer to length towards end of template
             primer["bases"] = getComplement(template["bases"][primer["pos"] : primer["pos"] + length])
-            
+            return True
         
         elif lenDiff > 0: # reverse primer extended backwards
             primer = self.reverse
@@ -94,9 +102,10 @@ class DNA:
             # extend primer to length towards start of template
             primer["pos"] -= length - len(primer["bases"])
             primer["bases"] = getComplement(template["bases"][primer["pos"] : primer["pos"] + length])
+            return True
         
         else: # operation not applicable in full double-helix
-            return
+            return False
 
     """put reverse strand into new object, reset relative positioning, return"""
     def denature(self):
@@ -140,12 +149,18 @@ def denatureAll(strandList):
         strandList.append(n)
 
 """add complementary primers to all single strands at target subsequence for replication"""
-def bindAll(strandList, forwardTarget, primerLen, variation=0):
+def bindAll(strandList, forwardTarget, primerCount, primerLen, variation=0):
     forwardPrimer = forwardTarget[: primerLen]
     reversePrimer = getComplement(forwardTarget[0 - primerLen :])
+    primersUsed = 0
     
     for s in strandList:
-        s.bindPrimer(forwardPrimer, reversePrimer)
+        if s.bindPrimer(forwardPrimer, reversePrimer):
+            primersUsed += 1
+            if primersUsed >= primerCount:
+                break
+
+    return primersUsed
 
 """extend all DNA primers to length in variation range"""
 def extendAll(strandList, extensionLen, variation=0):
@@ -183,14 +198,14 @@ def getStrandData(strandList, forwardTarget):
     # adjust data as needed
     dataset["avgLen"] /= dataset["numStrands"]
     dataset["avgLen"] = int(dataset["avgLen"])
-    dataset["lenList"].sort()
+    # dataset["lenList"].sort()
     
     return dataset
 
 """format and display previous"""
 def printStrandData(strandList, forwardTarget):
     dataSet = getStrandData(strandList, forwardTarget)
-    print("\nTotal strands:", dataSet["numStrands"])
+    print("Total strands:", dataSet["numStrands"])
     print("Copies of target sequence:", dataSet["targetCopies"])
     print("Length of target sequence:", len(forwardTarget))
     print("Average strand length:", dataSet["avgLen"])
@@ -201,10 +216,11 @@ n = 2000 #"""length of original template"""
 m = 200 #"""length of segment to amplify"""
 p = 20 #"""length of primers"""
 
-d = 220 # base fall-off rate for polymerase
+d = 230 # base fall-off rate for polymerase
 e = 50 # random variation in fall-off rate
 
-cycles = 10
+primers = 100000 # number of primers available in experiment
+cycles = 0 # number of cycles performed
 
 template = generateStrand(n) # original forward dna strand
 
@@ -214,12 +230,22 @@ forwardTarget = template[targetIndex : targetIndex + m] # desired dna sequence (
 
 strands = [DNA(template, getComplement(template))] #"""collection of all dna strands in the simulation"""
 
-# perform cycles
+# display preliminary information
+print("\nBegin PCR")
 printStrandData(strands, forwardTarget)
-while cycles > 0:
+print("Primer count:", primers)
+print("Processivity:", d, "+/-", e)
+
+# perform cycles
+while primers > 0:
     denatureAll(strands)
-    bindAll(strands, forwardTarget, p)
+    primers -= bindAll(strands, forwardTarget, primers, p)
     extendAll(strands, d, e)
+
+    cycles += 1
+    print("\nCycle", cycles)
     printStrandData(strands, forwardTarget)
-    cycles -= 1
+    print("Primers left:", primers)
+
+# print final results
 
