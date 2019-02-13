@@ -209,6 +209,7 @@ def printStrandData(strandList, forwardTarget):
     print("Copies of target sequence:", dataSet["targetCopies"])
     print("Length of target sequence:", len(forwardTarget))
     print("Average strand length:", dataSet["avgLen"])
+
     
 #"""driver program"""
 
@@ -216,7 +217,7 @@ n = 2000 #"""length of original template"""
 m = 200 #"""length of segment to amplify"""
 p = 20 #"""length of primers"""
 
-d = 230 # base fall-off rate for polymerase
+d = 200 # base fall-off rate for polymerase
 e = 50 # random variation in fall-off rate
 
 primers = 100000 # number of primers available in experiment
@@ -248,4 +249,13 @@ while primers > 0:
     print("Primers left:", primers)
 
 # print final results
+results = getStrandData(strands, forwardTarget)
+results["lenList"].sort()
+
+fileName = "results.txt"
+file = open(fileName, "w")
+for l in results["lenList"]:
+    file.write(str(l) + "\n")
+file.close()
+print("\nLength distribution written to", fileName)
 
