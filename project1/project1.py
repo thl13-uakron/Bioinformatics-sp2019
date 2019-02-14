@@ -67,7 +67,7 @@ class DNA:
         else: # operation not applicable with both strands present
             return False
 
-    """ extend primer in proper direction to a given length """
+    """ extend primer in proper direction by a given length """
     """ return true if extension made, false otherwise """
     def extendPrimer(self, length):
         # shorter strand identified as primer
@@ -84,11 +84,12 @@ class DNA:
             template = self.reverse
             
             # cap length as needed to match template
-            if template["pos"] + length > reverseLen:
-                length = reverseLen - template["pos"]
+            primerEnd = primer["pos"] + len(primer["bases"])
+            if primerEnd + length > reverseLen:
+                length = reverseLen - primerEnd
                 
-            # extend primer to length towards end of template
-            primer["bases"] = getComplement(template["bases"][primer["pos"] : primer["pos"] + length])
+            # extend primer by length towards end of template
+            primer["bases"] = primer["bases"] + getComplement(template["bases"][primerEnd : primerEnd + length])
             return True
         
         elif lenDiff > 0: # reverse primer extended backwards
@@ -96,12 +97,12 @@ class DNA:
             template = self.forward
             
             # cap length as needed to match template
-            if length > primer["pos"] + len(primer["bases"]):
-                length = primer["pos"] + len(primer["bases"])
+            if length > primer["pos"]:
+                length = primer["pos"]
                 
-            # extend primer to length towards start of template
-            primer["pos"] -= length - len(primer["bases"])
-            primer["bases"] = getComplement(template["bases"][primer["pos"] : primer["pos"] + length])
+            # extend primer by length towards start of template
+            primer["pos"] -= length
+            primer["bases"] = getComplement(template["bases"][primer["pos"] : primer["pos"] + length]) + primer["bases"]
             return True
         
         else: # operation not applicable in full double-helix
