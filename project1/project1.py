@@ -76,7 +76,7 @@ class DNA:
         lenDiff = forwardLen - reverseLen
 
         # operation not applicable if primer is empty
-        if forwardLen == 0 and reverseLen == 0:
+        if forwardLen == 0 or reverseLen == 0:
             return False
         
         if lenDiff < 0: # forward primer extended forward
