@@ -38,12 +38,12 @@ def swFillGrid(s1, s2, scoringMatrix, alignmentGrid):
         m = len(s2)
 
     for k in range (1, m):
-        swFillSquare(s1, s2, scoringMatrix, alignmentGrid, k, k)
+        swFillSquare(s1, s2, scoringMatrix, alignmentGrid, k, k) # (1)
         for i in range (k, len(s1)):
-            swFillSquare(s1, s2, scoringMatrix, alignmentGrid, i + 1, k)
+            swFillSquare(s1, s2, scoringMatrix, alignmentGrid, i + 1, k) # (2)
         for j in range (k, len(s2)):
-            swFillSquare(s1, s2, scoringMatrix, alignmentGrid, k, j + 1)
-        
+            swFillSquare(s1, s2, scoringMatrix, alignmentGrid, k, j + 1) # (3)
+        # (4) (5)
     
     return alignmentGrid
 
@@ -53,6 +53,16 @@ def swFillSquare(s1, s2, scoringMatrix, alignmentGrid, x, y):
     #   (a) moving down from square [i][j - 1]
     #   (b) moving right from square [i - 1][j]
     #   (c) moving diagonally from square [i - 1][j - 1]
+
+    alignmentGrid[x][y] = alignmentGrid[x][y - 1] + scoringMatrix[" "][s2[y - 1]] # (1a)
+
+    score = alignmentGrid[x - 1][y] + scoringMatrix[s1[x - 1]][" "] # (1b)
+    if score > alignmentGrid[x][y]:
+        alignmentGrid[x][y] = score
+
+    score = alignmentGrid[x - 1][y - 1] + scoringMatrix[s1[x - 1]][s2[y - 1]] # (1c)
+    if score > alignmentGrid[x][y]:
+        alignmentGrid[x][y] = score
 
     return 
 
@@ -76,13 +86,37 @@ def swGetTraceback(s1, s2, scoringMatrix, alignmentGrid):
     # (1) Start at square [n][m] at bottom right
     # (2) Compare score with squares [n - 1][m], [n][m - 1], and [n - 1][m - 1]
     # (3) Find option where score difference matches score from corresponding pairing
-    # (4) Add bases to aligned pair
+    # (4) Add bases to aligned pair, move to new square
     # (5) Repeat from new square until reaching [0][0]
     # (6) Return aligned pair
                                                                            
-    result = ("", "")
+    result = {s1:"", s2:""}
+
+    # (1)
+    n = len(s1)
+    m = len(s2)
+
+    while n > 0 or m > 0:
+        # (2)
+        if n > 0 and alignmentGrid[n][m] - alignmentGrid[n - 1][m] == scoringMatrix[s1[n - 1]][" "]: # (3)
+            # (4)
+            n -= 1
+            result[s1] = s1[n] + result[s1]
+            result[s2] = " " + result[s2]
+            
+        elif m > 0 and alignmentGrid[n][m] - alignmentGrid[n][m - 1] == scoringMatrix[" "][s2[m - 1]]:
+            m -= 1
+            result[s1] = " " + result[s1]
+            result[s2] = s2[m] + result[s2]
+            
+        elif n > 0 and m > 0 and alignmentGrid[n][m] - alignmentGrid[n - 1][m - 1] == scoringMatrix[s1[n - 1]][s2[m - 1]]:
+            n -= 1
+            m -= 1
+            result[s1] = s1[n] + result[s1]
+            result[s2] = s2[m] + result[s2]
+        # (5)
     
-    return result
+    return result # (6)
 
 # BLASTN algorithm
 # Given a query and target sequence of nucleotide bases,
