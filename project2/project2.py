@@ -14,43 +14,59 @@
 # (4) Get path of optimal score at square (n, m)
 # (5) Translate path into alignment, return aligned pair
 
-def fillGrid(s1, s2, scoringMatrix, alignmentGrid):
+# full algorithm combining all steps
+def smithWaterman(s1, s2, scoringMatrix):
+    # get initial grid values
+    alginmentGrid = swInitializeGrid(s1, s2, scoringMatrix)
+
+    # fill remaining values and find optimal path
+    alignmentGrid = swFillGrid(s1, s2, scoringMatrix, alignmentGrid)
+    return swGetTraceback(s1, s2, scoringMatrix, alignmentGrid)
+
+# components of algorithm
+def swFillGrid(s1, s2, scoringMatrix, alignmentGrid):
     # to fill rest of grid:
     # (1) fill square [k][k] starting with k=1
     # (2) extend values in same column
     # (3) extend values in same row
     # (4) incremement k
-    # (5) repeat until k reaches length of shorter string                                                                      
+    # (5) repeat until k reaches length of shorter string m                                                                     
     
+    if len(s1) > len(s2):
+        m = len(s1)
+    else:
+        m = len(s2)
+
+    for k in range (1, m):
+        swFillSquare(s1, s2, scoringMatrix, alignmentGrid, k, k)
+        for i in range (k, len(s1)):
+            swFillSquare(s1, s2, scoringMatrix, alignmentGrid, i + 1, k)
+        for j in range (k, len(s2)):
+            swFillSquare(s1, s2, scoringMatrix, alignmentGrid, k, j + 1)
+        
+    
+    return alignmentGrid
+
+def swFillSquare(s1, s2, scoringMatrix, alignmentGrid, x, y):
     # to fill individual squares:
     # (1) find highest score among available options:
     #   (a) moving down from square [i][j - 1]
     #   (b) moving right from square [i - 1][j]
     #   (c) moving diagonally from square [i - 1][j - 1]
 
-    #
-    
-    return alignmentGrid
-
-def smithWaterman(s1, s2, scoringMatrix):
-    # get initial grid values
-    alginmentGrid = swInitializeGrid(s1, s2, scoringMatrix)
-
-    # fill remaining values and find optimal path
-    alignmentGrid = fillGrid(s1, s2, scoringMatrix, alignmentGrid)
-    return swGetTraceback(s1, s2, scoringMatrix, alignmentGrid)
+    return 
 
 def swInitializeGrid(s1, s2, scoringMatrix):
     # fill initial grid value
     alignmentGrid = [[0]]
 
     # fill leading row
-    for i in range len(s1):
+    for i in range (0, len(s1)):
         alignmentGrid[i + 1] = [alignmentGrid[i] + scoringMatrix[s1[i]][" "]]
 
     # fill leading column
-    for j in range len(s2):
-        alignmentGrid[0][j + 1] = alignmentGrid[0][j] + scoringMatrix[" "][s2[j]
+    for j in range (0, len(s2)):
+        alignmentGrid[0][j + 1] = alignmentGrid[0][j] + scoringMatrix[" "][s2[j]]
 
     # return initial grid
     return alignmentGrid
@@ -78,11 +94,13 @@ def swGetTraceback(s1, s2, scoringMatrix, alignmentGrid):
 
 """Driver Program"""
 
-bases = ["A", "T", "C", "G", " "]
 scoringMatrix = {"A":{"A":1, "T":0, "G":0, "C":0, " ":-1},
                  "T":{"T":1, "G":0, "C":0, " ":-1},
                  "C":{"C":1, "G":0, " ":-1},
                  "G":{"G":1, " ":-1},
                  " ":{" ":0}}
+for b1 in scoringMatrix:
+     for b2 in scoringMatrix[b1]:
+         scoringMatrix[b2][b1] = scoringMatrix[b1][b2]
 
 
