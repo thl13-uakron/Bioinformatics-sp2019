@@ -1,7 +1,7 @@
 """Data Structures"""
 
 # character to represent gap values
-gap = " "
+gap = "-"
 
 """Helper Functions"""
 
@@ -35,10 +35,10 @@ def swFillGrid(s1, s2, scoringMatrix, alignmentGrid):
     # (4) incremement k
     # (5) repeat until k reaches length of shorter string m                                                                     
     
-    if len(s1) > len(s2):
-        m = len(s1)
+    if len(s1) < len(s2):
+        m = len(s1) + 1
     else:
-        m = len(s2)
+        m = len(s2) + 1
 
     for k in range (1, m):
         swFillSquare(s1, s2, scoringMatrix, alignmentGrid, k, k) # (1)
@@ -103,15 +103,15 @@ def swGetTraceback(s1, s2, scoringMatrix, alignmentGrid):
 
     while n > 0 or m > 0:
         # (2)
-        if n > 0 and alignmentGrid[n][m] - alignmentGrid[n - 1][m] == scoringMatrix[s1[n - 1]][" "]: # (3)
+        if n > 0 and alignmentGrid[n][m] - alignmentGrid[n - 1][m] == scoringMatrix[s1[n - 1]][gap]: # (3)
             # (4)
             n -= 1
             result[s1] = s1[n] + result[s1]
-            result[s2] = " " + result[s2]
+            result[s2] = gap + result[s2]
             
-        elif m > 0 and alignmentGrid[n][m] - alignmentGrid[n][m - 1] == scoringMatrix[" "][s2[m - 1]]:
+        elif m > 0 and alignmentGrid[n][m] - alignmentGrid[n][m - 1] == scoringMatrix[gap][s2[m - 1]]:
             m -= 1
-            result[s1] = " " + result[s1]
+            result[s1] = gap + result[s1]
             result[s2] = s2[m] + result[s2]
             
         elif n > 0 and m > 0 and alignmentGrid[n][m] - alignmentGrid[n - 1][m - 1] == scoringMatrix[s1[n - 1]][s2[m - 1]]:
@@ -147,6 +147,10 @@ def printGrid(s1, s2, alignmentGrid):
         
     return
 
+def swAnalyseAlignment(results):
+    # Given returned output from swGetTraceback method
+    return
+
 # BLASTN algorithm
 # Given a query and target sequence of nucleotide bases,
 # a scoring matrix, query length, and score cutoff:
@@ -168,11 +172,13 @@ for b1 in scoringMatrix:
          scoringMatrix[b2][b1] = scoringMatrix[b1][b2]
 
 # strand sequences
-s1 = "AAAC"
-s2 = "AGC"
+s1 = "AAACGGGTTTCCCCCAAA"
+s2 = "AGCCCCCAAAGTCGTCCCCGTCCGTC"
 
 grid = swInitializeGrid(s1, s2, scoringMatrix)
 swFillGrid(s1, s2, scoringMatrix, grid)
 printGrid(s1, s2, grid)
-
+traceback = swGetTraceback(s1, s2, scoringMatrix, grid)
+print(traceback[s1])
+print(traceback[s2])
 
