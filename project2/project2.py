@@ -5,7 +5,7 @@ gap = "-"
 
 """Helper Functions"""
 
-# Smith-Waterman algorithm
+# Needleman-Wunsch global alignment algorithm
 # Given a query and target sequence of nucleotide bases,
 # and a scoring matrix:
 # (1) Create score grid corresponding to strand bases
@@ -18,16 +18,16 @@ gap = "-"
 # (5) Translate path into alignment, return aligned pair
 
 # full algorithm combining all steps
-def smithWaterman(s1, s2, scoringMatrix):
+def needlemanWunsch(s1, s2, scoringMatrix):
     # get initial grid values
-    alginmentGrid = swInitializeGrid(s1, s2, scoringMatrix)
+    alginmentGrid = nwInitializeGrid(s1, s2, scoringMatrix)
 
     # fill remaining values and find optimal path
-    alignmentGrid = swFillGrid(s1, s2, scoringMatrix, alignmentGrid)
-    return swGetTraceback(s1, s2, scoringMatrix, alignmentGrid)
+    alignmentGrid = nwFillGrid(s1, s2, scoringMatrix, alignmentGrid)
+    return nwGetTraceback(s1, s2, scoringMatrix, alignmentGrid)
 
 # components of algorithm
-def swFillGrid(s1, s2, scoringMatrix, alignmentGrid):
+def nwFillGrid(s1, s2, scoringMatrix, alignmentGrid):
     # to fill rest of grid:
     # (1) fill square [k][k] starting with k=1
     # (2) extend values in same column
@@ -41,16 +41,16 @@ def swFillGrid(s1, s2, scoringMatrix, alignmentGrid):
         m = len(s2) + 1
 
     for k in range (1, m):
-        swFillSquare(s1, s2, scoringMatrix, alignmentGrid, k, k) # (1)
+        nwFillSquare(s1, s2, scoringMatrix, alignmentGrid, k, k) # (1)
         for i in range (k, len(s1)):
-            swFillSquare(s1, s2, scoringMatrix, alignmentGrid, i + 1, k) # (2)
+            nwFillSquare(s1, s2, scoringMatrix, alignmentGrid, i + 1, k) # (2)
         for j in range (k, len(s2)):
-            swFillSquare(s1, s2, scoringMatrix, alignmentGrid, k, j + 1) # (3)
+            nwFillSquare(s1, s2, scoringMatrix, alignmentGrid, k, j + 1) # (3)
         # (4) (5)
     
     return alignmentGrid
 
-def swFillSquare(s1, s2, scoringMatrix, alignmentGrid, x, y):
+def nwFillSquare(s1, s2, scoringMatrix, alignmentGrid, x, y):
     # to fill individual squares:
     # (1) find highest score among available options:
     #   (a) moving down from square [i][j - 1]
@@ -69,7 +69,7 @@ def swFillSquare(s1, s2, scoringMatrix, alignmentGrid, x, y):
 
     return 
 
-def swInitializeGrid(s1, s2, scoringMatrix):
+def nwInitializeGrid(s1, s2, scoringMatrix):
     # fill initial grid value
     alignmentGrid = [[0]]
 
@@ -86,7 +86,7 @@ def swInitializeGrid(s1, s2, scoringMatrix):
     # return initial grid
     return alignmentGrid
 
-def swGetTraceback(s1, s2, scoringMatrix, alignmentGrid):
+def nwGetTraceback(s1, s2, scoringMatrix, alignmentGrid):
     # To find global alignment pattern from completed grid:
     # (1) Start at square [n][m] at bottom right
     # (2) Compare score with squares [n - 1][m], [n][m - 1], and [n - 1][m - 1]
@@ -147,8 +147,8 @@ def printGrid(s1, s2, alignmentGrid):
         
     return
 
-def swAnalyseAlignment(results):
-    # Given returned output from swGetTraceback method
+def nwAnalyseAlignment(results):
+    # Given returned output from nwGetTraceback method
     return
 
 # BLASTN algorithm
@@ -175,10 +175,10 @@ for b1 in scoringMatrix:
 s1 = "AAACGGGTTTCCCCCAAA"
 s2 = "AGCCCCCAAAGTCGTCCCCGTCCGTC"
 
-grid = swInitializeGrid(s1, s2, scoringMatrix)
-swFillGrid(s1, s2, scoringMatrix, grid)
+grid = nwInitializeGrid(s1, s2, scoringMatrix)
+nwFillGrid(s1, s2, scoringMatrix, grid)
 printGrid(s1, s2, grid)
-traceback = swGetTraceback(s1, s2, scoringMatrix, grid)
+traceback = nwGetTraceback(s1, s2, scoringMatrix, grid)
 print(traceback[s1])
 print(traceback[s2])
 
