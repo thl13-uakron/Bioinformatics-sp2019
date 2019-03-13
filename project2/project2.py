@@ -1,5 +1,8 @@
 """Data Structures"""
 
+# character to represent gap values
+gap = " "
+
 """Helper Functions"""
 
 # Smith-Waterman algorithm
@@ -54,9 +57,9 @@ def swFillSquare(s1, s2, scoringMatrix, alignmentGrid, x, y):
     #   (b) moving right from square [i - 1][j]
     #   (c) moving diagonally from square [i - 1][j - 1]
 
-    alignmentGrid[x][y] = alignmentGrid[x][y - 1] + scoringMatrix[" "][s2[y - 1]] # (1a)
+    alignmentGrid[x][y] = alignmentGrid[x][y - 1] + scoringMatrix[gap][s2[y - 1]] # (1a)
 
-    score = alignmentGrid[x - 1][y] + scoringMatrix[s1[x - 1]][" "] # (1b)
+    score = alignmentGrid[x - 1][y] + scoringMatrix[s1[x - 1]][gap] # (1b)
     if score > alignmentGrid[x][y]:
         alignmentGrid[x][y] = score
 
@@ -70,13 +73,15 @@ def swInitializeGrid(s1, s2, scoringMatrix):
     # fill initial grid value
     alignmentGrid = [[0]]
 
-    # fill leading row
+    # fill leading row, create empty columns
     for i in range (0, len(s1)):
-        alignmentGrid[i + 1] = [alignmentGrid[i] + scoringMatrix[s1[i]][" "]]
+        alignmentGrid.append([alignmentGrid[i][0] + scoringMatrix[s1[i]][gap]])
+        for j in range (0, len(s2)):
+            alignmentGrid[i + 1].append(None)
 
     # fill leading column
     for j in range (0, len(s2)):
-        alignmentGrid[0][j + 1] = alignmentGrid[0][j] + scoringMatrix[" "][s2[j]]
+        alignmentGrid[0].append(alignmentGrid[0][j] + scoringMatrix[gap][s2[j]])
 
     # return initial grid
     return alignmentGrid
@@ -118,6 +123,30 @@ def swGetTraceback(s1, s2, scoringMatrix, alignmentGrid):
     
     return result # (6)
 
+def printGrid(s1, s2, alignmentGrid):
+    padding = 3
+
+    row = ("[" + (" " * padding) + "] ") * 2
+    for i in range (0, len(s1)):
+        row += "[" + (" " * (padding - 1)) + s1[i] + "] "
+    print(row)
+    
+    for j in range (0, len(alignmentGrid[0])):
+        row = ""
+
+        if j > 0:
+            columnChar = s2[j - 1]
+        else:
+            columnChar = " "
+        row += "[" + (" " * (padding - 1)) + columnChar + "] "
+        
+        for i in range (0, len(alignmentGrid)):
+            val = str(alignmentGrid[i][j])
+            row += "[" + (" " *  (padding - len(val))) + val + "] "
+        print(row)
+        
+    return
+
 # BLASTN algorithm
 # Given a query and target sequence of nucleotide bases,
 # a scoring matrix, query length, and score cutoff:
@@ -128,13 +157,22 @@ def swGetTraceback(s1, s2, scoringMatrix, alignmentGrid):
 
 """Driver Program"""
 
-scoringMatrix = {"A":{"A":1, "T":0, "G":0, "C":0, " ":-1},
-                 "T":{"T":1, "G":0, "C":0, " ":-1},
-                 "C":{"C":1, "G":0, " ":-1},
-                 "G":{"G":1, " ":-1},
-                 " ":{" ":0}}
+# score system
+scoringMatrix = {"A":{"A":1, "T":0, "G":0, "C":0, gap:-1},
+                 "T":{"T":1, "G":0, "C":0, gap:-1},
+                 "C":{"C":1, "G":0, gap:-1},
+                 "G":{"G":1, gap:-1},
+                 gap:{gap:0}}
 for b1 in scoringMatrix:
      for b2 in scoringMatrix[b1]:
          scoringMatrix[b2][b1] = scoringMatrix[b1][b2]
+
+# strand sequences
+s1 = "AAAC"
+s2 = "AGC"
+
+grid = swInitializeGrid(s1, s2, scoringMatrix)
+swFillGrid(s1, s2, scoringMatrix, grid)
+printGrid(s1, s2, grid)
 
 
