@@ -5,6 +5,13 @@ gap = "-"
 
 """Helper Functions"""
 
+def getFileContents(filename):
+    s = ""
+    fs = open(filename, "r")
+    s = fs.read()
+    fs.close()
+    return s
+
 # Needleman-Wunsch global alignment algorithm
 # Given a query and target sequence of nucleotide bases,
 # and a scoring matrix:
@@ -147,8 +154,35 @@ def printGrid(s1, s2, alignmentGrid):
         
     return
 
-def nwAnalyseAlignment(results):
-    # Given returned output from nwGetTraceback method
+# Organize aligned sequences into lines of fixed length for better visual comparison
+def getAlignmentLine(s, start, end):
+    padding = 5
+    startStr = str(start + 1)
+    endStr = str(end + 1)
+    return startStr + (" " * (padding - len(startStr))) + s[start:end] + (" " * (padding - len(endStr))) + endStr + "\n"
+def getAlignmentString(s1, s2, lineLength):
+    s = ""
+    lineStart = 0
+    lineEnd = lineLength
+
+    while lineEnd < len(s1):
+        s += getAlignmentLine(s1, lineStart, lineEnd)
+        s += getAlignmentLine(s2, lineStart, lineEnd) + "\n"
+        lineStart = lineEnd + 1
+        lineEnd = lineStart + lineLength
+
+    lineEnd = len(s1)
+    if lineEnd > lineStart:
+        s += getAlignmentLine(s1, lineStart, lineEnd)
+        s += getAlignmentLine(s2, lineStart, lineEnd)
+
+    return s
+    
+
+# Measure the frequency of different types of mutations
+def nwAnalyseAlignment(s1, s2):
+    # Given two aligned sequences of equal length:
+    # Parse
     return
 
 # BLASTN algorithm
@@ -172,13 +206,17 @@ for b1 in scoringMatrix:
          scoringMatrix[b2][b1] = scoringMatrix[b1][b2]
 
 # strand sequences
-s1 = "AAACGGGTTTCCCCCAAA"
-s2 = "AGCCCCCAAAGTCGTCCCCGTCCGTC"
+s1 = getFileContents("ohioFlu8.txt").replace("\n", "")
+s2 = getFileContents("shanghaiFlu8.txt").replace("\n", "")
 
+# run alignment algorithm
 grid = nwInitializeGrid(s1, s2, scoringMatrix)
 nwFillGrid(s1, s2, scoringMatrix, grid)
-printGrid(s1, s2, grid)
 traceback = nwGetTraceback(s1, s2, scoringMatrix, grid)
-print(traceback[s1])
-print(traceback[s2])
+
+# organize and print output
+result = getAlignmentString(traceback[s1], traceback[s2], 60)
+print(result)
+
+# save output to file
 
