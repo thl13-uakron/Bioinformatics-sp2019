@@ -185,6 +185,39 @@ def nwAnalyseAlignment(s1, s2):
     # Parse
     return
 
+
+#Determine protien equivalence
+def getMutations(s1, s2):
+    numMutations = [0, 0]    #holds synonymous and non-synonymous mutaion values respectively
+    table = {
+        'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M',
+        'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
+        'AAC':'N', 'AAT':'N', 'AAA':'K', 'AAG':'K',
+        'AGC':'S', 'AGT':'S', 'AGA':'R', 'AGG':'R',
+        'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L',
+        'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P',
+        'CAC':'H', 'CAT':'H', 'CAA':'Q', 'CAG':'Q',
+        'CGA':'R', 'CGC':'R', 'CGG':'R', 'CGT':'R',
+        'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V',
+        'GCA':'A', 'GCC':'A', 'GCG':'A', 'GCT':'A',
+        'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
+        'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G',
+        'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S',
+        'TTC':'F', 'TTT':'F', 'TTA':'L', 'TTG':'L',
+        'TAC':'Y', 'TAT':'Y', 'TAA':'_', 'TAG':'_',
+        'TGC':'C', 'TGT':'C', 'TGA':'_', 'TGG':'W',
+    }
+    for i in range(0, len(s1)-3, 3):
+        if s1[i:i+3] == s2[i:i+3]:
+            continue
+        elif table[s1[i:i+3]] == table[s2[i:i+3]] and s1[i:i+3] != s2[i:i+3]:
+            numMutations[0] += 1
+        else:
+            numMutations[1] += 1
+
+    return numMutations
+
+
 # BLASTN algorithm
 # Given a query and target sequence of nucleotide bases,
 # a scoring matrix, query length, and score cutoff:
@@ -217,6 +250,14 @@ traceback = nwGetTraceback(s1, s2, scoringMatrix, grid)
 # organize and print output
 result = getAlignmentString(traceback[s1], traceback[s2], 60)
 print(result)
+
+#statistics for tables
+print("indels: " + str(len(s2)-len(s1)))
+
+numMutations = getMutations(s1, s2)
+print("Synonymous mutations: " + str(numMutations[0]))
+print("non-synonymous mutations: " + str(numMutations[1]))
+
 
 # save output to file
 
