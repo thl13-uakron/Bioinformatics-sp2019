@@ -91,8 +91,31 @@ def getProbeList(datasetFilename, classVectorFilename):
     return probes
 
 ## write gene list to file in same format as original
-def writeDatasetFile(probeList, newDatasetFilename, oldDatasetFilename, oldClassVectorFilename):
-    return
+def writeDatasetFile(probeList, newDatasetFilename, oldDatasetFilename):
+    # open old dataset file
+    oldDataset = open(oldDatasetFilename)
+    # get header fields
+    headerStrings = [oldDataset.readline(), oldDataset.readline()]
+    
+    # open new file
+    newDataset = open(newDatasetFilename, "w")
+    # write header fields
+    newDataset.writelines(headerStrings)
+    # write gene data
+    newDataset.write(str(len(probeList)))
+    for probe in probeList:
+        probeString = probe["desc"] + "\t" + probe["id"]
+        for testClass in gene["expVals"]:
+            for testId in gene["expVals"][testClass]:
+                testResult = gene["expVals"][testClass][testId]
+                probeString = probeString + "\t" + testResult["score"]
+                probeString = probeString + "\t" + testResult["label"]
+        probeString = probeString + "\n"
+        newDataset.write(probeString)
+    
+    # close files
+    oldDataset.close()
+    newDataset.close()
 
 # initial file data
 trainingDatasetFile = "ALL_vs_AML_train_set_38_sorted.res"
@@ -102,10 +125,11 @@ geneList = getProbeList(trainingDatasetFile, trainingClassVector)
 
 # preprocessing
 threshold = 20
+removalList = []
 for gene in geneList:
     ## remove endrogenous control (housekeeping) genes
     if "endogenous control" in gene["desc"]:
-        geneList.remove(gene)
+        removalList.append(gene)
     else:
         ## remove genes labelled "A" in all experiments
         ## replace low expression values with score threshold
@@ -118,7 +142,7 @@ for gene in geneList:
             for testId in gene["expVals"][testClass]:
                 score = gene["expVals"][testClass][testId]["score"]
                 if int(score) < threshold:
-                    score = threshold
+                    score = str(threshold)
                     gene["expVals"][testClass][testId]["score"] = score
                 elif int(score) > maxVal:
                     maxVal = int(score)
@@ -126,10 +150,13 @@ for gene in geneList:
                 if gene["expVals"][testClass][testId]["label"] != "A":
                     toRemove = False
 
-        if maxVal < minVal * 2:
+        if maxVal < (minVal * 2):
             toRemove = True
         if toRemove == True:
-            geneList.remove(gene)
+            removalList.append(gene)
+
+for gene in removalList:
+    geneList.remove(gene)
                     
 ## send preprocessed data to file
-writeDatasetFile(geneList, preprocessedTrainingDataset, trainingDatasetFile, trainingClassVector)
+writeDatasetFile(geneList, preprocessedTrainingDataset, trainingDatasetFile)
