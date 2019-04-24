@@ -64,7 +64,8 @@ def getProbeList(datasetFilename, classVectorFilename):
     # convert to objects, add to probe list
     for p in probeStrings:
         p = p.split("\t") # split up data elements
-        p.remove("\n")
+        if "\n" in p:
+            p.remove("\n")
 
         # assign data to class members
         newProbe = Probe(p[1], p[0])
@@ -102,12 +103,12 @@ def writeDatasetFile(probeList, newDatasetFilename, oldDatasetFilename):
     # write header fields
     newDataset.writelines(headerStrings)
     # write gene data
-    newDataset.write(str(len(probeList)))
+    newDataset.write(str(len(probeList)) + "\n")
     for probe in probeList:
         probeString = probe["desc"] + "\t" + probe["id"]
-        for testClass in gene["expVals"]:
-            for testId in gene["expVals"][testClass]:
-                testResult = gene["expVals"][testClass][testId]
+        for testClass in probe["expVals"]:
+            for testId in probe["expVals"][testClass]:
+                testResult = probe["expVals"][testClass][testId]
                 probeString = probeString + "\t" + testResult["score"]
                 probeString = probeString + "\t" + testResult["label"]
         probeString = probeString + "\n"
