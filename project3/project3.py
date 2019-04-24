@@ -1,38 +1,89 @@
 # data structures
 ## gene probes
-class Probe:
-    identifier = ""
-    description = ""
-    expressionVals = {};
-    def __init__(i="", d="", expVals = {"AML":[], "ALL":[]}):
-        identifier = i
-        description = d
-        expressionValues = expVals
-    #
+def Probe(i="", d=""):
+    return {"id":i, "desc":d, "expVals":{"AML":{}, "ALL":{}}}
 
 # helper functions
 ## obtain list of genes for data file
 def getProbeList(datasetFilename, classVectorFilename):
+    # helper to clean up data lists
+    def removeAll(l, c):
+        for i in l:
+            if i == c:
+                l.remove(i)
+          
     probes = []
     
     # open class vector file
     classVector = open(classVectorFilename)
-    # get indicies
+
+    # class vector file format
+    ## number of microarray tests (deliminator: ' ' after)
+    ## number of (' ' after)
+    ## number of (\n after)
+    ## classification of each test sample (0 - ALL, 1 - AML) (' ' after)
+
+    # get index data
+    indices = classVector.readline()
+    indices = indices.split(" ")
+    testCount = int(indices[0])
+    
+    testClasses = classVector.readline()
+    testClasses = testClasses.split(" ")
+    testClasses.remove("\n")
     
     # open dataset file
     dataset = open(datasetFilename)
     
-    # record header fields as strings
-    titleListString = dataset.readline()
-    testListString = dataset.readline()
-    # convert to lists
-    titleList = titleListString.split("\t")
-    testList = testListString.split("\t")
+    # dataset file format:
+    ## header fields (deliminator: \n after)
+    ### description, accessor id (\t between)
+    ### microarray test samples (\t\t between)
+    ## list of test sample ids (\t\t between, \n after)
+    ## number of genes (\n after)
+    ## list of genes (\n between)
+    ### data for header fields (\t between)
+    ### test scores
+    #### expression value (\t after)
+    #### expression label (P, M, A) (\t after)
+    #### next expression value, etc.
     
-    # record gene data as string
-    probeString = dataset.readlines()
-    # convert to objects, add to list
+    # record header fields
+    titleList = dataset.readline()
+    titleList = titleList.split("\t")
+    titleList.remove("\n")
     
+    testList = dataset.readline()
+    testList = testList.split("\t")
+    testList.remove("\n")
+    removeAll(testList, "")
+    
+    # record gene data
+    probeCount = dataset.readline()
+    probeStrings = dataset.readlines()
+    # convert to objects, add to probe list
+    for p in probeStrings:
+        p = p.split("\t") # split up data elements
+        p.remove("\n")
+
+        # assign data to class members
+        newProbe = Probe(p[1], p[0])
+        
+        pIndex = 2 # iterate through test values in data list
+        while pIndex < len(p):
+            testResult = {"score":p[pIndex], "label":p[pIndex + 1]}
+            
+            testIndex = int((pIndex - 2) / 2) # corresponding test sample
+            testId = testList[testIndex] # get test name and classification
+            if testClasses[testIndex] == '1': 
+                newProbe["expVals"]["AML"][testId] = testResult
+            else:
+                newProbe["expVals"]["ALL"][testId] = testResult
+            
+            pIndex += 2
+        
+        probes.append(newProbe)
+
     # close files
     classVector.close()
     dataset.close()
@@ -44,7 +95,7 @@ def getProbeList(datasetFilename, classVectorFilename):
 # initial file data
 trainingDatasetFile = "ALL_vs_AML_train_set_38_sorted.res"
 trainingClassVector = "ALL_vs_AML_train_set_38_sorted.cls"
-geneList = getProbeList(trainingDataset, trainingClassVector)
+geneList = getProbeList(trainingDatasetFile, trainingClassVector)
 
 # preprocessing
 ## remove endrogenous control (housekeeping) genes
