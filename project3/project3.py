@@ -91,15 +91,45 @@ def getProbeList(datasetFilename, classVectorFilename):
     return probes
 
 ## write gene list to file in same format as original
+def writeDatasetFile(probeList, newDatasetFilename, oldDatasetFilename, oldClassVectorFilename):
+    return
 
 # initial file data
 trainingDatasetFile = "ALL_vs_AML_train_set_38_sorted.res"
 trainingClassVector = "ALL_vs_AML_train_set_38_sorted.cls"
+preprocessedTrainingDataset = "ALL_vs_AML_train_set_38_preprocessed.res"
 geneList = getProbeList(trainingDatasetFile, trainingClassVector)
 
 # preprocessing
-## remove endrogenous control (housekeeping) genes
-## remove genes labelled "A" in all experiments
-## replace low expression values with score threshold
-## remove genes where max value is less than double min value
+threshold = 20
+for gene in geneList:
+    ## remove endrogenous control (housekeeping) genes
+    if "endogenous control" in gene["desc"]:
+        geneList.remove(gene)
+    else:
+        ## remove genes labelled "A" in all experiments
+        ## replace low expression values with score threshold
+        ## remove genes where max value is less than double min value
+        toRemove = True
+        minVal = threshold
+        maxVal = threshold
+        
+        for testClass in gene["expVals"]:
+            for testId in gene["expVals"][testClass]:
+                score = gene["expVals"][testClass][testId]["score"]
+                if int(score) < threshold:
+                    score = threshold
+                    gene["expVals"][testClass][testId]["score"] = score
+                elif int(score) > maxVal:
+                    maxVal = int(score)
+                    
+                if gene["expVals"][testClass][testId]["label"] != "A":
+                    toRemove = False
+
+        if maxVal < minVal * 2:
+            toRemove = True
+        if toRemove == True:
+            geneList.remove(gene)
+                    
 ## send preprocessed data to file
+writeDatasetFile(geneList, preprocessedTrainingDataset, trainingDatasetFile, trainingClassVector)
