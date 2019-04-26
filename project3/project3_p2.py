@@ -3,14 +3,10 @@ from project3 import Probe
 from project3 import getProbeList
 from project3 import writeDatasetFile
 
-# helper functions
-## two-sample t test
-def TTest(l1, l2):
-    p = 0
-    return p
+from scipy import stats
 
 # file data (training set)
-trainingDatasetFile = "ALL_vs_AML_train_set_38_preprocessed.res"
+trainingDatasetFile = "ALL_vs_AML_train_set_38_preprocessed.res" 
 trainingClassVector = "ALL_vs_AML_train_set_38_sorted.cls"
 processedTrainingDataset = "ALL_vs_AML_train_set_38_processed.res"
 trainingGeneList = getProbeList(trainingDatasetFile, trainingClassVector)
@@ -24,7 +20,7 @@ for gene in trainingGeneList:
         AMLset.append(int(gene["expVals"]["AML"][testId]["score"]))
     for testId in gene["expVals"]["ALL"]:
         ALLset.append(int(gene["expVals"]["ALL"][testId]["score"]))
-    gene["p-value"] = TTest(AMLset, ALLset)
+    gene["pvalue"] = stats.ttest_ind(AMLset, ALLset).pvalue
     
 ## sort genes by p-value from two-sample T test, select and save 50 lowest to new file
 
