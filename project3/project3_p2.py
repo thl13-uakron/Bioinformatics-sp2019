@@ -20,9 +20,13 @@ for gene in trainingGeneList:
         AMLset.append(int(gene["expVals"]["AML"][testId]["score"]))
     for testId in gene["expVals"]["ALL"]:
         ALLset.append(int(gene["expVals"]["ALL"][testId]["score"]))
-    gene["pvalue"] = stats.ttest_ind(AMLset, ALLset).pvalue
-    
+    gene["pvalue"] = stats.ttest_ind(AMLset, ALLset, equal_var=False).pvalue
+
 ## sort genes by p-value from two-sample T test, select and save 50 lowest to new file
+savedGenes = 50
+trainingGeneList.sort(key=lambda g:g["pvalue"])
+savedGeneList = trainingGeneList[:savedGenes]
+writeDatasetFile(savedGeneList, processedTrainingDataset, trainingDatasetFile)
 
 # file data (testing set)
 testingDatasetFile = "Leuk_ALL_AML.test.res"
