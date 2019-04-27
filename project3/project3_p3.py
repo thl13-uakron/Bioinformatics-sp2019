@@ -49,6 +49,8 @@ def getSampleClasses(datasetFilename, classVectorFilename):
 ## get manhattan distance between two samples based on expression values
 def getDistance(s1, s2):
     d = 0
+    for gene in s1["score"]:
+        d += abs(s1["score"][gene] - s2["score"][gene])
     return d
 
 # file data
@@ -75,6 +77,8 @@ testingSampleList = getSampleList(testingGeneList, ignoredGenesList)
 
 # sample classifications for training set
 trainingSampleClasses = getSampleClasses(trainingDatasetFile, trainingClassVector)
+for sample in trainingSampleClasses:
+    trainingSampleList[sample]["class"] = trainingSampleClasses[sample]
 
 # classification algorithm
 ## start with samples in training set
@@ -82,8 +86,15 @@ trainingSampleClasses = getSampleClasses(trainingDatasetFile, trainingClassVecto
 ## find samples in training set closest to selected samples
 ## give selected sample same classification as majority of nearby sample
 ## move sample to training set, repeat with rest of testing set
+k = 3
 for sample1 in testingSampleList:
-    distances = []
+    distances = {}
+    nearestNeighbors = []
+    for sample2 in trainingSampleList:
+        distances[sample2] = getDistance(testingSampleList[sample1], trainingSampleList[sample2])
+        nearestNeighbors.append(sample2)
+    nearestNeighbors.sort(key=lambda s:distances[s])
+    nearestNeighbors = nearestNeighbors[:3]
 
 # display results
 ## check accuracy based on actual classifications listed in file
