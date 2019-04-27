@@ -8,12 +8,14 @@ def getSampleList(geneList, restrictedIds=[]):
     sampleList = {}
     for gene in geneList:
         if gene["id"] not in restrictedIds:
-            for testClass in gene[expVals]:
+            for testClass in gene["expVals"]:
                 # essentially "rotating" the score table portion
                 # {geneId1:{sampleId1:score11, sampleId2, score12, etc.
                 # -> {sampleId1:{geneId1:score11, geneId2:score21, etc.
-                scoreList = gene[expVals][testClass]
+                scoreList = gene["expVals"][testClass]
                 for sample in scoreList:
+                    if sample not in sampleList:
+                        sampleList[sample] = {}
                     sampleList[sample][gene["id"]] = int(scoreList[sample]["score"])
     return sampleList
 
@@ -45,9 +47,12 @@ testingClassVector = "Leuk_ALL_AML.test.cls"
 testingGeneList = getProbeList(testingDatasetFile, testingClassVector)
 
 # expression data only compared for genes present in both datasets (optimization)
+trainingGeneIds = []
+for gene in trainingGeneList:
+    trainingGeneIds.append(gene["id"])
 ignoredGenesList = []
 for gene in testingGeneList:
-    if gene not in trainingGeneList:
+    if gene["id"] not in trainingGeneIds:
         ignoredGenesList.append(gene["id"])
 
 # sample ids and expression values
