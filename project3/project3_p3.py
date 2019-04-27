@@ -83,18 +83,45 @@ for sample in trainingSampleClasses:
 # classification algorithm
 ## start with samples in training set
 ## take samples from testing set
-## find samples in training set closest to selected samples
-## give selected sample same classification as majority of nearby sample
-## move sample to training set, repeat with rest of testing set
+## find samples in training set closest to selected samples (a)
+## give selected sample same classification as majority of nearby sample (b)
+## move sample to training set, repeat with rest of testing set (c)
 k = 3
 for sample1 in testingSampleList:
     distances = {}
     nearestNeighbors = []
-    for sample2 in trainingSampleList:
+    for sample2 in trainingSampleList: # (a)
         distances[sample2] = getDistance(testingSampleList[sample1], trainingSampleList[sample2])
         nearestNeighbors.append(sample2)
+        
     nearestNeighbors.sort(key=lambda s:distances[s])
-    nearestNeighbors = nearestNeighbors[:3]
+    nearestNeighbors = nearestNeighbors[:k]
+    classFrequency = {}
+    for n in nearestNeighbors:
+        neighborClass = trainingSampleList[n]["class"]
+        if neighborClass not in classFrequency:
+            classFrequency[neighborClass] = 1
+        else:
+            classFrequency[neighborClass] += 1
+        if classFrequency[neighborClass] > (k / 2): # (b)
+            sampleClass = neighborClass
+            break
+
+    if sampleClass:
+        testingSampleList[sample1]["class"] = sampleClass
+        trainingSampleList[sample1] = testingSampleList[sample1] # (c)
 
 # display results
 ## check accuracy based on actual classifications listed in file
+testingSampleClasses = getSampleClasses(testingDatasetFile, testingClassVector)
+correct = 0
+print(str(k) + "NN Classification:")
+for sample in testingSampleClasses:
+    determinedClass = testingSampleList[sample]["class"]
+    actualClass = testingSampleClasses[sample]
+    print("[" + sample + "] " + "Determined: " + determinedClass + ", Actual: " + actualClass)
+    
+    if determinedClass == actualClass:
+        correct += 1
+
+print("Accuracy: " + str(correct / len(testingSampleClasses))) 
