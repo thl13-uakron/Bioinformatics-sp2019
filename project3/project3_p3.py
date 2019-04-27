@@ -15,21 +15,35 @@ def getSampleList(geneList, restrictedIds=[]):
                 scoreList = gene["expVals"][testClass]
                 for sample in scoreList:
                     if sample not in sampleList:
-                        sampleList[sample] = {}
-                    sampleList[sample][gene["id"]] = int(scoreList[sample]["score"])
+                        sampleList[sample] = {"score":{}}
+                    sampleList[sample]["score"][gene["id"]] = int(scoreList[sample]["score"])
     return sampleList
 
 ## get classifications of corresponding samples
-def getSampleClasses(classVectorFilename):
+def getSampleClasses(datasetFilename, classVectorFilename):
     classVector = open(classVectorFilename)
+    dataset = open(datasetFilename)
     
-    # extract line containing classifications, convert to list
+    # get sample ids
+    dataset.readline()
+    idList = dataset.readline()
+    idList = idList.split("\t")
+    # get classifications
     classVector.readline()
-    sampleClasses = classVector.readline()
-    sampleClasses = sampleClasses.replace("\n", "")
-    sampleClasses = sampleClasses.split(" ")
+    classList = classVector.readline()
+    classList = classList.split(" ")
+    # pair corresponding data values
+    sampleClasses = {}
+    for i, c in zip(idList, classList):
+        if i == "" or i == "\n":
+            idList.remove(i)
+        if c == "" or c == "\n":
+            classList.remove(c)
+    for i, c in zip(idList, classList):
+        sampleClasses[i] = c
         
     classVector.close()
+    dataset.close()
     return sampleClasses
 
 ## get manhattan distance between two samples based on expression values
@@ -59,12 +73,17 @@ for gene in testingGeneList:
 trainingSampleList = getSampleList(trainingGeneList)
 testingSampleList = getSampleList(testingGeneList, ignoredGenesList)
 
+# sample classifications for training set
+trainingSampleClasses = getSampleClasses(trainingDatasetFile, trainingClassVector)
+
 # classification algorithm
 ## start with samples in training set
 ## take samples from testing set
 ## find samples in training set closest to selected samples
 ## give selected sample same classification as majority of nearby sample
 ## move sample to training set, repeat with rest of testing set
+for sample1 in testingSampleList:
+    distances = []
 
 # display results
 ## check accuracy based on actual classifications listed in file
